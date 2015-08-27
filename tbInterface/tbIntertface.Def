@@ -1,0 +1,18 @@
+LIBRARY tbInterface
+EXPORTS
+run
+make_monkey
+startTaobao
+stopTaobao
+entryMainActivity
+entrySearchConditionActivity
+entrySearchResultActivity
+entryCommodityActivity
+entryEvaluationActivity
+entryCommodityActivityRandomly
+exitCommodityActivity
+exitShopActivity
+exitSearchResultActivity
+exitSearchConditionActivity
+exitMainActivity
+initial
