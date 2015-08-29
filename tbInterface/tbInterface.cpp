@@ -5,8 +5,9 @@
 #include "tbInterface.h"
 
 #include <stdio.h>
+#include <iostream>
 #include <string>
-
+#include <list>
 
 // 这是导出变量的一个示例
 TBINTERFACE_API int ntbInterface=0;
@@ -546,4 +547,49 @@ TBINTERFACE_API char * exitMainActivity(char * device)
 		return "run fail";
 
 	return getReturnString(output);
+}
+
+TBINTERFACE_API void getDevices(std::list<std::string> * devicelist)
+{
+	if(devicelist == NULL)
+		return ;
+
+	devicelist->clear();
+
+	std::string cmd = "adb devices";
+	std::string output;
+
+	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	if(retval < 0)
+		return ;
+
+	if(output.size() <= 0)
+		return ;
+
+	std::list<std::string> lines;
+	char * head = (char *)output.c_str();
+	do
+	{
+		char * end = strstr(head, "\r\n");
+		if(end == NULL)
+			break ;
+
+		lines.push_back(std::string(head, end - head));
+
+		head = end + strlen("\r\n");
+	}while(true);
+
+	if(lines.size() <= 0)
+		return ;
+
+	for(std::list<std::string>::iterator it = lines.begin(); it != lines.end(); it++)
+	{
+		std::string line = *it;
+		char * p = (char *)line.c_str();
+		char * p2 = strstr(p, " ");
+		if(p2 == NULL)
+			continue;
+
+		devicelist->push_back(std::string(p, p2 - p));
+	}
 }
