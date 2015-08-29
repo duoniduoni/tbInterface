@@ -1,7 +1,6 @@
 LIBRARY tbInterface
 EXPORTS
 run
-make_monkey
 startTaobao
 stopTaobao
 entryMainActivity

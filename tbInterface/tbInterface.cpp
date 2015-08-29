@@ -192,7 +192,7 @@ char curpath[MAX_PATH] = {0};
 char adbpath[MAX_PATH] = {0};
 char jarpath[MAX_PATH] = {0};
 
-int push_jar_to_phone(std::string *output)
+int push_jar_to_phone(char * device, std::string *output)
 {
 	GetCurrentDirectory(MAX_PATH, curpath);
 
@@ -203,75 +203,13 @@ int push_jar_to_phone(std::string *output)
 	sprintf_s(jarpath, MAX_PATH, "%s\\tbrun.jar", curpath);
 
 	//构造push命令
-	char pushcmd[256] = {0};
-	sprintf_s(pushcmd, 256, "adb push %s /data/local/tmp", jarpath);
+	char pushcmd[1024] = {0};
+	if(device == NULL)
+		sprintf_s(pushcmd, 1024, "adb push %s /data/local/tmp", jarpath);
+	else
+		sprintf_s(pushcmd, 1024, "adb -s %s push %s /data/local/tmp", device, jarpath);
 
 	return run(adbpath, pushcmd, output);
-}
-
-int run_taobao_process(char * search, char* matchs, bool ioec, unsigned int sct, unsigned int set, std::string * output)
-{
-	//构造命令参数
-	std::string old_cmd = search;
-
-	int templen = old_cmd.size();
-	if(old_cmd.at(templen - 1) == '#' &&
-		old_cmd.at(templen - 2) == '\\' &&
-		old_cmd.at(templen - 3) == '\\'
-		)
-	{
-	}
-	else
-		old_cmd += "\\#";
-
-	old_cmd += "*";
-	old_cmd += matchs;
-
-	templen = old_cmd.size();
-	if(old_cmd.at(templen - 1) == '#' &&
-		old_cmd.at(templen - 2) == '\\' &&
-		old_cmd.at(templen - 3) == '\\'
-		)
-	{
-	}
-	else
-		old_cmd += "\\#";
-
-	char tmp[256] = {0};
-	sprintf_s(tmp, 256, "*%s*%d*%d", ioec ? "TRUE":"FALSE", sct, set);
-
-	old_cmd += tmp;
-	
-	std::string param_string = old_cmd;
-	std::wstring param_wstring;
-	string2wstring(param_string, param_wstring);
-	std::string param_utf8;
-	wstring2utf8string(param_wstring,param_utf8);
-
-	//构造运行命令
-	char runcmd[512] = {0};
-	sprintf_s(runcmd, 512, "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#testDemo2 -e args %s", 
-		param_utf8.c_str());
-	/*
-	//将运行命令转换为UTF8编码
-	char * runcmd_utf8 = GB18030ToUTF_8(runcmd, strlen(runcmd));
-	int retval = run(adbpath, runcmd_utf8, output);
-	delete []runcmd_utf8;
-	*/
-	int retval = run(adbpath, runcmd, output);
-	
-	return retval;
-}
-
-TBINTERFACE_API int make_monkey(char * search, char* matchs, bool ioec, unsigned int sct, unsigned int set, std::string * output)
-{
-	if(push_jar_to_phone(output) < 0)
-		return -1;
-
-	if(run_taobao_process(search, matchs, ioec, sct, set, output) < 0)
-		return -2;
-
-	return 0;
 }
 
 /*
@@ -306,27 +244,21 @@ char * getReturnString(std::string & str)
 	return result;
 }
 
-TBINTERFACE_API int initial()
+TBINTERFACE_API int initial(char * device)
 {
 	std::string output;
-	return push_jar_to_phone(&output);
+	return push_jar_to_phone(device, &output);
 }
 
-TBINTERFACE_API char * startTaobao()
+TBINTERFACE_API char * startTaobao(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#startTaobao";
-
-	std::string output;
-	int retval = run(adbpath, (char *)cmd.c_str(), &output);
-	if(retval < 0)
-		return "run fail";
-
-	return getReturnString(output);
-}
-
-TBINTERFACE_API char * stopTaobao()
-{
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#stopTaobao";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#startTaobao";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
@@ -336,9 +268,15 @@ TBINTERFACE_API char * stopTaobao()
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entryMainActivity()
+TBINTERFACE_API char * stopTaobao(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryMainActivity";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#stopTaobao";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
@@ -348,9 +286,33 @@ TBINTERFACE_API char * entryMainActivity()
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entrySearchConditionActivity(char * arg)
+TBINTERFACE_API char * entryMainActivity(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entrySearchConditionActivity -e args ";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryMainActivity";
+
+	std::string output;
+	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	if(retval < 0)
+		return "run fail";
+
+	return getReturnString(output);
+}
+
+TBINTERFACE_API char * entrySearchConditionActivity(char * device, char * arg)
+{
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entrySearchConditionActivity -e args ";
 
 	char tmp[256] = {0};
 	sprintf_s(tmp, 256, "%s", arg);
@@ -381,9 +343,15 @@ TBINTERFACE_API char * entrySearchConditionActivity(char * arg)
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entrySearchResultActivity(char * arg)
+TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entrySearchResultActivity -e args ";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entrySearchResultActivity -e args ";
 
 	char tmp[256] = {0};
 	sprintf_s(tmp, 256, "%s", arg);
@@ -414,9 +382,15 @@ TBINTERFACE_API char * entrySearchResultActivity(char * arg)
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entryCommodityActivity(int arg)
+TBINTERFACE_API char * entryCommodityActivity(char * device, int arg)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryCommodityActivity -e args ";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryCommodityActivity -e args ";
 
 	char tmp[256] = {0};
 	sprintf_s(tmp, 256, "%d", arg);
@@ -437,9 +411,15 @@ TBINTERFACE_API char * entryCommodityActivity(int arg)
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entryEvaluationActivity(int arg)
+TBINTERFACE_API char * entryEvaluationActivity(char * device, int arg)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryEvaluationActivity -e args ";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryEvaluationActivity -e args ";
 
 	char tmp[256] = {0};
 	sprintf_s(tmp, 256, "%d", arg);
@@ -460,9 +440,15 @@ TBINTERFACE_API char * entryEvaluationActivity(int arg)
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entryCommodityActivityRandomly()
+TBINTERFACE_API char * entryCommodityActivityRandomly(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryCommodityActivityRandomly";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryCommodityActivityRandomly";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
@@ -472,9 +458,15 @@ TBINTERFACE_API char * entryCommodityActivityRandomly()
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * exitCommodityActivity()
+TBINTERFACE_API char * exitCommodityActivity(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitCommodityActivity";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitCommodityActivity";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
@@ -484,9 +476,15 @@ TBINTERFACE_API char * exitCommodityActivity()
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * exitShopActivity()
+TBINTERFACE_API char * exitShopActivity(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitShopActivity";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitShopActivity";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
@@ -496,9 +494,15 @@ TBINTERFACE_API char * exitShopActivity()
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * exitSearchResultActivity()
+TBINTERFACE_API char * exitSearchResultActivity(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitSearchResultActivity";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitSearchResultActivity";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
@@ -508,9 +512,15 @@ TBINTERFACE_API char * exitSearchResultActivity()
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * exitSearchConditionActivity()
+TBINTERFACE_API char * exitSearchConditionActivity(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitSearchConditionActivity";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitSearchConditionActivity";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
@@ -520,9 +530,15 @@ TBINTERFACE_API char * exitSearchConditionActivity()
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * exitMainActivity()
+TBINTERFACE_API char * exitMainActivity(char * device)
 {
-	std::string cmd = "adb shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitMainActivity";
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitMainActivity";
 
 	std::string output;
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
