@@ -195,11 +195,6 @@ char jarpath[MAX_PATH] = {0};
 
 int push_jar_to_phone(char * device, std::string *output)
 {
-	GetCurrentDirectory(MAX_PATH, curpath);
-
-	//构造adb全路径
-	sprintf_s(adbpath, MAX_PATH, "%s\\adb.exe", curpath);
-
 	//构造jar包地址
 	sprintf_s(jarpath, MAX_PATH, "%s\\tbrun.jar", curpath);
 
@@ -549,10 +544,10 @@ TBINTERFACE_API char * exitMainActivity(char * device)
 	return getReturnString(output);
 }
 
-TBINTERFACE_API void getDevices(std::list<std::string> * devicelist)
+TBINTERFACE_API int getDevices(std::list<std::string> * devicelist)
 {
 	if(devicelist == NULL)
-		return ;
+		return 0;
 
 	devicelist->clear();
 
@@ -561,10 +556,10 @@ TBINTERFACE_API void getDevices(std::list<std::string> * devicelist)
 
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
 	if(retval < 0)
-		return ;
+		return retval;
 
 	if(output.size() <= 0)
-		return ;
+		return 0;
 
 	std::list<std::string> lines;
 	char * head = (char *)output.c_str();
@@ -580,7 +575,7 @@ TBINTERFACE_API void getDevices(std::list<std::string> * devicelist)
 	}while(true);
 
 	if(lines.size() <= 0)
-		return ;
+		return 0;
 
 	char * strMark = "\t";
 	for(std::list<std::string>::iterator it = lines.begin(); it != lines.end(); it++)
@@ -599,4 +594,6 @@ TBINTERFACE_API void getDevices(std::list<std::string> * devicelist)
 
 		devicelist->push_back(std::string(p, p2 - p));
 	}
+
+	return 0;
 }
