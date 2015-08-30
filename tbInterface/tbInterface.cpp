@@ -582,12 +582,19 @@ TBINTERFACE_API void getDevices(std::list<std::string> * devicelist)
 	if(lines.size() <= 0)
 		return ;
 
+	char * strMark = "\t";
 	for(std::list<std::string>::iterator it = lines.begin(); it != lines.end(); it++)
 	{
 		std::string line = *it;
 		char * p = (char *)line.c_str();
-		char * p2 = strstr(p, " ");
+		char * p2 = strstr(p, strMark);
 		if(p2 == NULL)
+			continue;
+
+		std::string mark = std::string(p2 + strlen(strMark), line.length() - (p2 - p) - strlen(strMark)); 
+		std::string device = std::string(p, p2 - p);
+
+		if(strcmp(mark.c_str(), "device") != 0)
 			continue;
 
 		devicelist->push_back(std::string(p, p2 - p));
