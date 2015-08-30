@@ -256,8 +256,12 @@ TBINTERFACE_API char * startTaobao(char * device)
 	}
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#startTaobao";
 
+	OutputDebugString(cmd.c_str());
+
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -275,7 +279,9 @@ TBINTERFACE_API char * stopTaobao(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#stopTaobao";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -293,11 +299,26 @@ TBINTERFACE_API char * entryMainActivity(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryMainActivity";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
 	return getReturnString(output);
+}
+
+void moveSpace(std::string & srcStr, std::string & newStr)
+{
+	newStr.clear();
+
+	for(int i = 0; i < srcStr.size(); i++)
+	{
+		if(srcStr.at(i) == ' ')
+			newStr += '@';
+		else
+			newStr += srcStr.at(i);
+	}
 }
 
 TBINTERFACE_API char * entrySearchConditionActivity(char * device, char * arg)
@@ -310,10 +331,10 @@ TBINTERFACE_API char * entrySearchConditionActivity(char * device, char * arg)
 	}
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entrySearchConditionActivity -e args ";
 
-	char tmp[256] = {0};
-	sprintf_s(tmp, 256, "%s", arg);
-	
-	std::string param_string = tmp;
+	std::string oldArg = arg;
+	std::string param_string;
+	moveSpace(oldArg, param_string);
+
 	int templen = param_string.size();
 	if(param_string.at(templen - 1) == '#' &&
 		param_string.at(templen - 2) == '\\' &&
@@ -332,14 +353,16 @@ TBINTERFACE_API char * entrySearchConditionActivity(char * device, char * arg)
 	cmd += param_utf8;
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg)
+TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg, char * address, float price, float postfee)
 {
 	std::string cmd = "adb";
 	if(device)
@@ -349,10 +372,34 @@ TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg)
 	}
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entrySearchResultActivity -e args ";
 
-	char tmp[256] = {0};
-	sprintf_s(tmp, 256, "%s", arg);
-	
-	std::string param_string = tmp;
+	std::string oldArg = arg;
+	std::string param_string;
+	moveSpace(oldArg, param_string);
+
+	if(address)
+	{
+		param_string += "\\#address=";
+		param_string += address;		
+	}
+
+	if(price >= 0)
+	{
+		char tmp[64];
+		sprintf_s(tmp, 64, "%.02f", price);
+
+		param_string += "\\price=";
+		param_string += tmp;
+	}
+
+	if(postfee >= 0)
+	{
+		char tmp[64];
+		sprintf_s(tmp, 64, "%.02f", postfee);
+
+		param_string += "\\postfee=";
+		param_string += tmp;
+	}
+
 	int templen = param_string.size();
 	if(param_string.at(templen - 1) == '#' &&
 		param_string.at(templen - 2) == '\\' &&
@@ -371,7 +418,9 @@ TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg)
 	cmd += param_utf8;
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -400,7 +449,9 @@ TBINTERFACE_API char * entryCommodityActivity(char * device, int arg)
 	cmd += param_utf8;
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -429,7 +480,9 @@ TBINTERFACE_API char * entryEvaluationActivity(char * device, int arg)
 	cmd += param_utf8;
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -447,7 +500,9 @@ TBINTERFACE_API char * entryCommodityActivityRandomly(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#entryCommodityActivityRandomly";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -465,7 +520,9 @@ TBINTERFACE_API char * exitCommodityActivity(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitCommodityActivity";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -483,7 +540,9 @@ TBINTERFACE_API char * exitShopActivity(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitShopActivity";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -501,7 +560,9 @@ TBINTERFACE_API char * exitSearchResultActivity(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitSearchResultActivity";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -519,7 +580,9 @@ TBINTERFACE_API char * exitSearchConditionActivity(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitSearchConditionActivity";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
@@ -537,7 +600,9 @@ TBINTERFACE_API char * exitMainActivity(char * device)
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#exitMainActivity";
 
 	std::string output;
+	OutputDebugString(cmd.c_str());
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
 	if(retval < 0)
 		return "run fail";
 
