@@ -16,3 +16,4 @@ exitSearchConditionActivity
 exitMainActivity
 initial
 getDevices
+isInstallSpecialInput

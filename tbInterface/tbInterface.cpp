@@ -312,7 +312,7 @@ void moveSpace(std::string & srcStr, std::string & newStr)
 {
 	newStr.clear();
 
-	for(int i = 0; i < srcStr.size(); i++)
+	for(int i = 0; i < (int)srcStr.size(); i++)
 	{
 		if(srcStr.at(i) == ' ')
 			newStr += '@';
@@ -661,4 +661,32 @@ TBINTERFACE_API int getDevices(std::list<std::string> * devicelist)
 	}
 
 	return 0;
+}
+
+TBINTERFACE_API bool isInstallSpecialInput(char * device)
+{
+	std::string cmd = "adb";
+	if(device)
+	{
+		cmd += " -s ";
+		cmd += device;
+	}
+	cmd += " shell \"pm list packages | grep \"";
+
+	std::string output;
+	OutputDebugString(cmd.c_str());
+	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
+	if(retval < 0)
+		return "run fail";
+
+	char * src = (char *)output.c_str();
+	const char * key = "resultKey=";
+	char * p = strstr(src, key);
+	if(p == NULL)
+	{
+		false;
+	}
+
+	return true;
 }
