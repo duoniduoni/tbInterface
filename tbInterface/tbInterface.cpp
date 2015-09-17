@@ -671,7 +671,7 @@ TBINTERFACE_API bool isInstallSpecialInput(char * device)
 		cmd += " -s ";
 		cmd += device;
 	}
-	cmd += " shell \"pm list packages | grep \"";
+	cmd += " shell \"pm list packages | grep jp.jun_nama.test.utf7ime \"";
 
 	std::string output;
 	OutputDebugString(cmd.c_str());
@@ -681,7 +681,7 @@ TBINTERFACE_API bool isInstallSpecialInput(char * device)
 		return "run fail";
 
 	char * src = (char *)output.c_str();
-	const char * key = "resultKey=";
+	const char * key = "jp.jun_nama.test.utf7ime";
 	char * p = strstr(src, key);
 	if(p == NULL)
 	{
