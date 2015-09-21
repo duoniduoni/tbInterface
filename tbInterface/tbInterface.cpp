@@ -1,4 +1,4 @@
-// tbInterface.cpp : ¶¨Òå DLL Ó¦ÓÃ³ÌĞòµÄµ¼³öº¯Êı¡£
+// tbInterface.cpp : å®šä¹‰ DLL åº”ç”¨ç¨‹åºçš„å¯¼å‡ºå‡½æ•°ã€‚
 //
 
 #include "stdafx.h"
@@ -9,18 +9,18 @@
 #include <string>
 #include <list>
 
-// ÕâÊÇµ¼³ö±äÁ¿µÄÒ»¸öÊ¾Àı
+// è¿™æ˜¯å¯¼å‡ºå˜é‡çš„ä¸€ä¸ªç¤ºä¾‹
 TBINTERFACE_API int ntbInterface=0;
 
-// ÕâÊÇµ¼³öº¯ÊıµÄÒ»¸öÊ¾Àı¡£
+// è¿™æ˜¯å¯¼å‡ºå‡½æ•°çš„ä¸€ä¸ªç¤ºä¾‹ã€‚
 TBINTERFACE_API int fntbInterface(void)
 {
 	
 	return 42;
 }
 
-// ÕâÊÇÒÑµ¼³öÀàµÄ¹¹Ôìº¯Êı¡£
-// ÓĞ¹ØÀà¶¨ÒåµÄĞÅÏ¢£¬Çë²ÎÔÄ tbInterface.h
+// è¿™æ˜¯å·²å¯¼å‡ºç±»çš„æ„é€ å‡½æ•°ã€‚
+// æœ‰å…³ç±»å®šä¹‰çš„ä¿¡æ¯ï¼Œè¯·å‚é˜… tbInterface.h
 CtbInterface::CtbInterface()
 {
 	return;
@@ -142,7 +142,7 @@ TBINTERFACE_API int run(char * cmd, char * argv, std::string * op)
     sa.lpSecurityDescriptor = NULL;  
     sa.bInheritHandle = TRUE;  
   
-    if (!CreatePipe(&hRead,&hWrite,&sa,0)) //´´½¨ÄäÃû¹ÜµÀ  
+    if (!CreatePipe(&hRead,&hWrite,&sa,0)) //åˆ›å»ºåŒ¿åç®¡é“  
     {  
 		char tmp[256] = {0};
         sprintf_s(tmp, 256, "CreatePipe failed (%d)!\n", GetLastError());  
@@ -155,11 +155,11 @@ TBINTERFACE_API int run(char * cmd, char * argv, std::string * op)
     sInfo.cb = sizeof(sInfo);  
     sInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;  
     sInfo.wShowWindow = SW_HIDE;  
-    sInfo.hStdError = hWrite;   //½«¹ÜµÀµÄĞ´¶Ë½»¸ø×Ó½ø³Ì  
+    sInfo.hStdError = hWrite;   //å°†ç®¡é“çš„å†™ç«¯äº¤ç»™å­è¿›ç¨‹  
     sInfo.hStdOutput = hWrite;  
     memset(&pInfo, 0, sizeof(pInfo));  
   
-    if(!CreateProcess(cmd, argv, NULL, NULL, TRUE, 0, NULL, NULL, &sInfo, &pInfo)) //´´½¨×Ó½ø³Ì  
+    if(!CreateProcess(cmd, argv, NULL, NULL, TRUE, 0, NULL, NULL, &sInfo, &pInfo)) //åˆ›å»ºå­è¿›ç¨‹  
     {  
         char tmp[256] = {0};
         sprintf_s(tmp, 256, "CreateProcess failed (%d)!\n", GetLastError());  
@@ -171,11 +171,11 @@ TBINTERFACE_API int run(char * cmd, char * argv, std::string * op)
 		retval = -2;
         goto out;  
     }  
-    CloseHandle(hWrite); //¹Ø±Õ¸¸½ø³ÌµÄĞ´¶Ë  
+    CloseHandle(hWrite); //å…³é—­çˆ¶è¿›ç¨‹çš„å†™ç«¯  
   
     while (1)  
     {  
-        if (!ReadFile(hRead,Buffer,sizeof(Buffer)-1,&bytesRead,NULL)) //¶ÁÈ¡ÄÚÈİ  
+        if (!ReadFile(hRead,Buffer,sizeof(Buffer)-1,&bytesRead,NULL)) //è¯»å–å†…å®¹  
         {  
             break;  
         }  
@@ -195,10 +195,10 @@ char jarpath[MAX_PATH] = {0};
 
 int push_jar_to_phone(char * device, std::string *output)
 {
-	//¹¹Ôìjar°üµØÖ·
+	//æ„é€ jaråŒ…åœ°å€
 	sprintf_s(jarpath, MAX_PATH, "%s\\tbrun.jar", curpath);
 
-	//¹¹ÔìpushÃüÁî
+	//æ„é€ pushå‘½ä»¤
 	char pushcmd[1024] = {0};
 	if(device == NULL)
 		sprintf_s(pushcmd, 1024, "adb push %s /data/local/tmp", jarpath);
@@ -678,15 +678,29 @@ TBINTERFACE_API bool isInstallSpecialInput(char * device)
 	int retval = run(adbpath, (char *)cmd.c_str(), &output);
 	OutputDebugString(output.c_str());
 	if(retval < 0)
-		return "run fail";
+		return false;
 
 	char * src = (char *)output.c_str();
 	const char * key = "jp.jun_nama.test.utf7ime";
 	char * p = strstr(src, key);
 	if(p == NULL)
 	{
-		false;
+		return false;
 	}
+	
+	std::string cmd2 = "adb";
+	if(device)
+	{
+		cmd2 += " -s ";
+		cmd2 += device;
+	}
+	cmd2 += " shell \"ime set jp.jun_nama.test.utf7ime/.Utf7ImeService \"";
+	std::string output2;
+	OutputDebugString(cmd2.c_str());
+	retval = run(adbpath, (char *)cmd2.c_str(), &output2);
+	OutputDebugString(output2.c_str());
+	if(retval < 0)
+		return false;
 
 	return true;
 }
