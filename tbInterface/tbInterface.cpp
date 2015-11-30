@@ -260,12 +260,20 @@ TBINTERFACE_API char * startTaobao(char * device)
 
 	std::string output;
 	OutputDebugString(cmd.c_str());
-	int retval = run(adbpath, (char *)cmd.c_str(), &output);
-	OutputDebugString(output.c_str());
-	if(retval < 0)
-		return "run fail";
 
-	return getReturnString(output);
+	int times = 3;
+	while(times-- > 0)
+	{
+		int retval = run(adbpath, (char *)cmd.c_str(), &output);
+		OutputDebugString(output.c_str());
+		if(retval < 0)
+			return "run fail";
+
+		if(strcmp(getReturnString(output), "good") == 0)
+			return "good";
+	}
+
+	return "fault";
 }
 
 TBINTERFACE_API char * stopTaobao(char * device)
