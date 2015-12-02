@@ -370,7 +370,7 @@ TBINTERFACE_API char * entrySearchConditionActivity(char * device, char * arg)
 	return getReturnString(output);
 }
 
-TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg, char * address, float price, float postfee)
+TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg, char * address, float price, float postfee, bool go_on)
 {
 	std::string cmd = "adb";
 	if(device)
@@ -395,7 +395,7 @@ TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg, char
 		char tmp[64];
 		sprintf_s(tmp, 64, "%.02f", price);
 
-		param_string += "\\price=";
+		param_string += "\\#price=";
 		param_string += tmp;
 	}
 
@@ -404,8 +404,14 @@ TBINTERFACE_API char * entrySearchResultActivity(char * device, char * arg, char
 		char tmp[64];
 		sprintf_s(tmp, 64, "%.02f", postfee);
 
-		param_string += "\\postfee=";
+		param_string += "\\#postfee=";
 		param_string += tmp;
+	}
+
+	if(go_on == false)
+	{
+		param_string += "\\#go_on=";
+		param_string += "FALSE";
 	}
 
 	int templen = param_string.size();
