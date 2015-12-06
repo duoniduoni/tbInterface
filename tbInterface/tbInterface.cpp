@@ -256,24 +256,15 @@ TBINTERFACE_API char * startTaobao(char * device)
 	}
 	cmd += " shell uiautomator runtest tbrun.jar -c com.uiautomatortest.Test#startTaobao";
 
-	OutputDebugString(cmd.c_str());
-
 	std::string output;
 	OutputDebugString(cmd.c_str());
 
-	int times = 3;
-	while(times-- > 0)
-	{
-		int retval = run(adbpath, (char *)cmd.c_str(), &output);
-		OutputDebugString(output.c_str());
-		if(retval < 0)
-			return "run fail";
+	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
+	if(retval < 0)
+		return "run fail";
 
-		if(strcmp(getReturnString(output), "good") == 0)
-			return "good";
-	}
-
-	return "fault";
+	return getReturnString(output);
 }
 
 TBINTERFACE_API char * stopTaobao(char * device)
@@ -697,11 +688,34 @@ TBINTERFACE_API bool isInstallSpecialInput(char * device)
 	char * src = (char *)output.c_str();
 	const char * key = "jp.jun_nama.test.utf7ime";
 	char * p = strstr(src, key);
-	if(p == NULL)
+	if(p != NULL)
 	{
-		return false;
 	}
-	
+	else
+	{
+		//安装输入法
+		std::string cmd3 = "adb";
+		if(device)
+		{
+			cmd3 += " -s ";
+			cmd3 += device;
+		}
+		char inputPath[MAX_PATH]  = {0};
+		sprintf_s(inputPath, MAX_PATH, "%s\\Utf7Ime.apk", curpath);
+		cmd3 += " install ";
+		cmd3 += inputPath;
+
+		std::string output3;
+		OutputDebugString(cmd3.c_str());
+		retval = run(adbpath, (char *)cmd3.c_str(), &output3);
+		OutputDebugString(output3.c_str());
+		if(retval < 0)
+			return false;
+
+		if(strstr((char *)output3.c_str(), "Success") == NULL)
+			return false;
+	}
+	//设置输入法
 	std::string cmd2 = "adb";
 	if(device)
 	{
