@@ -211,6 +211,21 @@ int push_jar_to_phone(char * device, std::string *output)
 /*
 	-----------------------------------------------------------------------------------------------------------------------------------------
 */
+
+void storeErrorToFile(std::string & err)
+{
+	SYSTEMTIME systime;  
+	GetLocalTime(&systime);
+
+	CString file_name;
+	file_name.Format("./err_%d_%d_%d_%d_%d_%d.err", systime.wYear, systime.wMonth, systime.wDay, systime.wHour, systime.wMinute, systime.wSecond);
+
+	CFile file;
+	file.Open(file_name, CFile::modeCreate | CFile::modeReadWrite);
+	file.Write(err.c_str(), err.length());
+	file.Close();
+}
+
 char result[128] = {0};
 char * getReturnString(std::string & str)
 {
@@ -224,6 +239,9 @@ char * getReturnString(std::string & str)
 		if(p == NULL)
 		{
 			sprintf_s(result, 128, "not find result key");
+
+			storeErrorToFile(str);
+
 			break;
 		}
 
@@ -231,6 +249,7 @@ char * getReturnString(std::string & str)
 		if(p2 == NULL)
 		{
 			sprintf_s(result, 128, "not find \r\n");
+			storeErrorToFile(str);
 			break;
 		}
 
@@ -731,4 +750,35 @@ TBINTERFACE_API bool isInstallSpecialInput(char * device)
 		return false;
 
 	return true;
+}
+
+
+TBINTERFACE_API char * start_adb_server(char * device)
+{
+	std::string cmd = "adb start-server";
+
+	std::string output;
+	OutputDebugString(cmd.c_str());
+
+	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
+	if(retval < 0)
+		return "run fail";
+
+	return getReturnString(output);
+}
+
+TBINTERFACE_API char * kill_adb_server(char * device)
+{
+	std::string cmd = "adb kill-server";
+
+	std::string output;
+	OutputDebugString(cmd.c_str());
+
+	int retval = run(adbpath, (char *)cmd.c_str(), &output);
+	OutputDebugString(output.c_str());
+	if(retval < 0)
+		return "run fail";
+
+	return getReturnString(output);
 }
